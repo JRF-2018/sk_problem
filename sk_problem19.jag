@@ -1,0 +1,39 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:41:31Z>
+
+data {
+  # N <- 100000000
+  # n.fam.sk <- 100
+  # filter.fam <- 0.01
+  # n.risk <- 1000000
+  # mag.risk <- 2
+  # mag.all <- 10
+  # alpha.pos <- 1
+  # beta.pos <- 2
+  one1 <- 1
+}
+
+model {
+  p.pos.sk.temp ~ dbeta(alpha.pos, beta.pos)
+  p.pos.nsk.temp ~ dbeta(alpha.pos, beta.pos)
+  p.pos.sk.risk <- p.pos.sk.temp * mag.risk / mag.all
+  p.pos.nsk.risk <- p.pos.nsk.temp * mag.risk / mag.all
+  p.pos.sk.nrisk <- p.pos.sk.temp / mag.all
+  p.pos.nsk.nrisk <- p.pos.nsk.temp / mag.all
+
+  n.pos.sk.risk ~ dbinom(p.pos.sk.risk , n.risk - n.fam.sk)
+  n.pos.nsk.risk ~ dbinom(p.pos.nsk.risk , n.risk)
+  n.pos.sk.nrisk ~ dbinom(p.pos.sk.nrisk, N - n.risk)
+  n.pos.nsk.nrisk ~ dbinom(p.pos.nsk.nrisk, N - n.risk)
+
+  n.fam.f ~ dbinom(filter.fam, n.fam.sk)
+  n.pos.fam.f ~ dbinom(p.pos.sk.risk, n.fam.f)
+  n.pos.fam.nf ~ dbinom(p.pos.sk.risk, n.fam.sk - n.fam.f)
+  one1 ~ sum(step(n.pos.fam.f - 1) * 1, 0)  ## i.e. TRUE ~ (n.pos.fam.f >= 1)
+
+  n.pos.sk <- n.pos.sk.risk + n.pos.sk.nrisk + n.pos.fam.f + n.pos.fam.nf
+  n.pos.nsk <- n.pos.nsk.risk + n.pos.nsk.nrisk
+
+  diff <- n.pos.sk - n.pos.nsk
+  gr <- n.pos.sk > n.pos.nsk
+}

@@ -1,0 +1,23 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:40:56Z>
+
+data {
+  # N <- 100
+  # n.fam.sk <- 5
+  one1 <- 1
+  one2 <- 1
+}
+
+model {
+  n.pos.sk ~ dbinom(p.pos.sk, N)
+  n.pos.nsk ~ dbinom(p.pos.nsk, N)
+  p.pos.sk ~ dbeta(0.5, 1)
+  p.pos.nsk ~ dbeta(0.5, 1)
+  diff <- n.pos.sk - n.pos.nsk
+  gr <- n.pos.sk > n.pos.nsk
+
+  n.pos.fam ~ dbinom(p.pos.sk, n.fam.sk)
+
+  one1 ~ sum(step(n.pos.fam - 1) * 1, 0)
+  one2 ~ sum(step(n.pos.sk - n.pos.fam) * 1, 0)
+}

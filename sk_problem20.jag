@@ -1,0 +1,24 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:41:35Z>
+
+data {
+  N <- 10000
+  alpha <- 0.5
+  beta <- 1.0
+  one1 <- 1
+}
+
+model {
+  p1 ~ dbeta(alpha, beta)
+  p2 ~ dbeta(alpha, beta)
+  n1 ~ dbin(p1, 2 * N)
+  n11 ~ dbin(p1, N)
+  one1 ~ sum((n1 >= n11) * 1, 0)
+  #one1 ~ sum(step(n1 - n11), 0)
+
+  n21 ~ dbin(p2, N)
+  n22 ~ dbin(p2, N)
+  n2 <- n21 + n22
+
+  diff <- n1 - n2
+}

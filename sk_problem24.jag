@@ -1,0 +1,36 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:41:54Z>
+
+data {
+  # N <- 100000000
+  # n.fam.sk <- 100
+  # alpha.pos <- 0.5
+  # beta.pos <- 1
+  # n.pos.pub <- 200
+  # filter.fam.mag <- 10
+  # filter.pub <- 0.001
+  # n.pos.pub.fam <- 1
+  n.pos.pub.rest <- n.pos.pub - n.pos.pub.fam
+}
+
+model {
+  p.pos.sk ~ dbeta(alpha.pos, beta.pos)
+  p.pos.nsk ~ dbeta(alpha.pos, beta.pos)
+  filter.pub.sk ~ dbeta(alpha.filter, beta.filter)
+  filter.pub.nsk ~ dbeta(alpha.filter, beta.filter)
+  filter.pub.fam <- min(1, filter.pub.sk * filter.fam.mag)
+
+  n.pos.sk.nfam ~ dbinom(p.pos.sk, N - n.fam.sk)
+  n.pos.nsk ~ dbinom(p.pos.nsk, N)
+
+  n.pos.fam ~ dbinom(p.pos.sk, n.fam.sk)
+
+  n.pos.pub ~ dbinom(filter.pub.nsk, n.pos.nsk)
+  n.pos.pub.rest ~ dbinom(filter.pub.sk, n.pos.sk.nfam)
+  n.pos.pub.fam ~ dbinom(filter.pub.fam, n.pos.fam)
+
+  n.pos.sk <- n.pos.sk.nfam + n.pos.fam
+
+  diff <- n.pos.sk - n.pos.nsk
+  gr <- n.pos.sk > n.pos.nsk
+}

@@ -1,0 +1,32 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:40:43Z>
+
+data {
+  # N <- 100
+  # n.fam.sk <- 5
+  # n.risk <- 10
+  # pi.risk <- 0.2
+  # pi.nrisk <- 0.1
+  one1 <- 1
+}
+
+model {
+  n.pos.sk ~ dbinom(p.pos.sk, N)
+  n.pos.nsk ~ dbinom(p.pos.nsk, N)
+  p.pos.sk ~ dbeta(0.5, 1)
+  p.pos.nsk ~ dbeta(0.5, 1)
+  diff <- n.pos.sk - n.pos.nsk
+  gr <- n.pos.sk > n.pos.nsk
+
+  for (i in 1:n.risk) {
+    pi.pos[i] <- pi.risk
+  }
+  for (i in n.risk + 1:N) {
+    pi.pos[i] <- pi.nrisk
+  }
+  for (i in 1:N) {
+    m.pos[i] ~ dcat(pi.pos)
+    eq.pos[i] <- ifelse(i <= n.pos.sk, m.pos[i] <= n.fam.sk, 0)
+  }
+  one1 ~ sum(step(sum(eq.pos) - 1) * 1, 0)
+}

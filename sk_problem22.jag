@@ -1,0 +1,48 @@
+## Version: 0.0.1
+## Time-stamp: <2020-05-08T19:41:45Z>
+
+data {
+  # N <- 100000000
+  # n.fam.sk <- 100
+  # n.risk <- 1000000
+  # mag.risk <- 2
+  # mag.all <- 10
+  # alpha.pos <- 0.5
+  # beta.pos <- 1
+  # n.pos.pub <- 200
+  # filter.pub.fam <- 0.001 * 10
+  # filter.pub <- 0.001
+  # n.pos.pub.fam <- 1
+  n.pos.pub.rest <- n.pos.pub - n.pos.pub.fam
+}
+
+model {
+  p.pos.sk.temp ~ dbeta(alpha.pos, beta.pos)
+  p.pos.nsk.temp ~ dbeta(alpha.pos, beta.pos)
+  p.pos.sk.risk <- p.pos.sk.temp * mag.risk / mag.all
+  p.pos.nsk.risk <- p.pos.nsk.temp * mag.risk / mag.all
+  p.pos.sk.nrisk <- p.pos.sk.temp / mag.all
+  p.pos.nsk.nrisk <- p.pos.nsk.temp / mag.all
+
+  n.pos.sk.risk ~ dbinom(p.pos.sk.risk , n.risk - n.fam.sk)
+  n.pos.nsk.risk ~ dbinom(p.pos.nsk.risk , n.risk)
+  n.pos.sk.nrisk ~ dbinom(p.pos.sk.nrisk, N - n.risk)
+  n.pos.nsk.nrisk ~ dbinom(p.pos.nsk.nrisk, N - n.risk)
+
+  n.pos.fam ~ dbinom(p.pos.sk.risk, n.fam.sk)
+
+  n.pos.nsk.risk.pub ~ dbinom(filter.pub, n.pos.nsk.risk)
+  n.pos.nsk.nrisk.pub ~ dbinom(filter.pub, n.pos.nsk.nrisk)
+  n.pos.sk.risk.pub ~ dbinom(filter.pub, n.pos.sk.risk)
+  n.pos.sk.nrisk.pub ~ dbinom(filter.pub, n.pos.sk.nrisk)
+  n.pos.pub.fam ~ dbinom(filter.pub.fam, n.pos.fam)
+
+  n.pos.pub ~ sum(n.pos.nsk.risk.pub, n.pos.nsk.nrisk.pub)
+  n.pos.pub.rest ~ sum(n.pos.sk.risk.pub, n.pos.sk.nrisk.pub)
+
+  n.pos.sk <- n.pos.sk.risk + n.pos.sk.nrisk + n.pos.fam
+  n.pos.nsk <- n.pos.nsk.risk + n.pos.nsk.nrisk
+
+  diff <- n.pos.sk - n.pos.nsk
+  gr <- n.pos.sk > n.pos.nsk
+}
